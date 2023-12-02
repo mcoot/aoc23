@@ -9,7 +9,8 @@ enum Color:
   case GREEN
   case BLUE
 
-case class CubeSet(red: Int, green: Int, blue: Int)
+case class CubeSet(red: Int, green: Int, blue: Int):
+  def power: Int = red * green * blue
 
 case class Game(id: Int, reveals: List[CubeSet])
 
@@ -71,7 +72,15 @@ object Day2 extends SolutionWithParser[List[Game], Int, Int]:
     }.map(_.id).sum
 
   override def solvePart2(input: List[Game]): Int =
-    ???
+    input.map { g =>
+      g.reveals.foldLeft[CubeSet](CubeSet(0, 0, 0)) {
+        case (curMax, CubeSet(r, g, b)) => CubeSet(
+          if r > curMax.red then r else curMax.red,
+          if g > curMax.green then g else curMax.green,
+          if b > curMax.blue then b else curMax.blue,
+        )
+      }.power
+    }.sum
 
 @main def run(): Unit = Day2.run()
 
