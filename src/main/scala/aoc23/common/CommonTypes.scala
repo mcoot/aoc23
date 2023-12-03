@@ -14,6 +14,14 @@ case class Point2D(x: Int, y: Int):
   // Convert to pair
   def pair: (Int, Int) = (x, y)
 
+  def neighbourPoints: List[Point2D] =
+    for
+      x <- List(-1, 0, 1)
+      y <- List(-1, 0, 1)
+      if x != 0 || y != 0
+    yield
+      Point2D(this.x + x, this.y + y)
+
   // Vector / complex addition and subtraction
   @targetName("add")
   def +(other: Point2D): Point2D = Point2D(x + other.x, y + other.y)
