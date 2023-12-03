@@ -29,14 +29,15 @@ case class Grid(arr: Array[Array[Item]]):
   // Combine digits together and make an adjacency list
   // Note I'm not properly parsing number-to-number adjacencies... we'll see if that is needed for pt2
   def toAdjacency: Adjacency =
-    val result: MutableMap[(Int, Item.Number), List[Item]] = MutableMap()
-    var curAdj: List[Item] = List()
-    // Sigh, we can have duplicates of a number so yuck
-    var curAdjIdx = 0
+    val result: MutableMap[(Point2D, Item.Number), List[(Point2D, Item)]] = MutableMap()
+    var curAdj: List[(Point2D, Item)] = List()
     var curNumber: Option[Int] = None
 
     for y <- 0 until bound.y do
       for x <- 0 until bound.x do
+        // Sigh, we can have duplicates of a number so yuck
+        // Use the (rightmost) point in a value as a unique identifier
+        var curAdjId = Point2D(x, y)
         (this(Point2D(x, y)), curNumber) match
           // Starting to read a number
           case (Item.Number(value), None) =>
@@ -47,14 +48,12 @@ case class Grid(arr: Array[Array[Item]]):
                 case (pt, Item.Number(v)) if pt == Point2D(x, y) + Point2D(1, 0) => false
                 case _ => true
               }
-              .map(_._2)
             curNumber = Some(value)
             // Check if we're at the end of the line as we should break here
             if x == maxPtIdx.x then
-              result((curAdjIdx, Item.Number(curNumber.get))) = curAdj
+              result((curAdjId, Item.Number(curNumber.get))) = curAdj
               curAdj = List()
               curNumber = None
-              curAdjIdx += 1
           // Continuing reading a number
           case (Item.Number(value), Some(n)) =>
             curAdj = curAdj ++ this.neighbours(Point2D(x, y))
@@ -65,29 +64,38 @@ case class Grid(arr: Array[Array[Item]]):
                 case (pt, Item.Number(_)) if pt == Point2D(x, y) + Point2D(1, 0) => false
                 case _ => true
               }
-              .map(_._2)
             curNumber = Some(n * 10 + value)
             // Check if we're at the end of the line as we should break here
             if x == maxPtIdx.x then
-              result((curAdjIdx, Item.Number(curNumber.get))) = curAdj
+              result((curAdjId, Item.Number(curNumber.get))) = curAdj
               curAdj = List()
               curNumber = None
-              curAdjIdx += 1
           // Ending reading a number due to a non-digit item
           case (v, Some(n)) =>
             // All adjacencies should already have been captured when reading the last digit
             // So here we just save what we have and reset
-            result((curAdjIdx, Item.Number(curNumber.get))) = curAdj
+            result((curAdjId, Item.Number(curNumber.get))) = curAdj
             curAdj = List()
             curNumber = None
-            curAdjIdx += 1
           // Continue case, not currently parsing a number
           case _ =>
 
     Adjacency(result.toMap)
 
 
-case class Adjacency(data: Map[(Int, Item.Number), List[Item]]):
+case class Adjacency(data: Map[(Point2D, Item.Number), List[(Point2D, Item)]]):
+  def gears: List[(Item.Number, Item.Number)] =
+    val entries = data.toList
+    for
+      (i1, adj1) <- entries
+      (i2, adj2) <- entries
+      if i1._1 != i2._1
+      if adj1.intersect(adj2).collectFirst {
+        case (_, Item.Symbol('*')) => true
+      }.isDefined
+    yield
+      (i1._2, i2._2)
+
   def mkString: String =
     data.map { (k, v) =>
       s"${k._1},${k._2.value}: ${v.mkString(", ")}"
@@ -114,19 +122,20 @@ object Day3 extends SolutionWithParser[Grid, Int, Int]:
 
   override def solvePart1(input: Grid): Int =
     val adjList = input.toAdjacency
-    println(adjList.mkString)
     val partNumbers = adjList.data.filter { case (k, adj) =>
       adj.collectFirst {
-          case Item.Symbol(symbol) => symbol
+          case (_, Item.Symbol(symbol)) => symbol
       }.isDefined
     }.keys.toList
-    println()
-    println(partNumbers)
-    println(adjList.data.keys.filter(i => !partNumbers.contains(i)).map(_._2.value).toList)
     partNumbers.map(_._2.value).sum
 
   override def solvePart2(input: Grid): Int =
-    ???
+    val adjList = input.toAdjacency
+    val gears = adjList.gears
+    println(gears)
+    gears.map {
+      case (a, b) => a.value * b.value
+    }.sum / 2
 
 
 @main def run(): Unit = Day3.run()
