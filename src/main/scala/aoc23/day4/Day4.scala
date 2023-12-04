@@ -1,9 +1,11 @@
 package aoc23.day4
 
+import scala.collection.mutable.Map as MutableMap
 import aoc23.common.{CommonParsers, SolutionWithParser}
 import cats.parse.Parser
 
-case class Scratchcard(id: Int, winning: List[Int], have: List[Int])
+case class Scratchcard(id: Int, winning: Set[Int], have: Set[Int]):
+  def matching: Set[Int] = winning.intersect(have)
 
 object Parsing:
   private def num: Parser[Int] =
@@ -17,9 +19,9 @@ object Parsing:
       _ <- CommonParsers.string("Card ")
       id <- num
       _ <- CommonParsers.string(":")
-      winning <- numList
+      winning <- numList.map(_.toSet)
       _ <- CommonParsers.string("|")
-      have <- numList
+      have <- numList.map(_.toSet)
     yield
       Scratchcard(id, winning, have)
 
@@ -33,18 +35,24 @@ object Day4 extends SolutionWithParser[List[Scratchcard], Int, Int]:
 
   override def solvePart1(input: List[Scratchcard]): Int =
     input.map { s =>
-      val haveWinning = s.winning.toSet.intersect(s.have.toSet)
-      if haveWinning.isEmpty then
+      if s.matching.isEmpty then
         0
       else
-        Math.pow(2, haveWinning.size - 1).intValue
+        Math.pow(2, s.matching.size - 1).intValue
     }.sum
 
   override def solvePart2(input: List[Scratchcard]): Int =
-    0
+    val copies: MutableMap[Int, Int] =
+      MutableMap.from(input.map(_.id).zip(List.fill(input.length)(1)))
+    input.foreach { case s =>
+      val cardsCopied = s.id + 1 to s.id + s.matching.size
+      cardsCopied.foreach { copiedId =>
+        copies(copiedId) += copies(s.id)
+      }
+    }
+    copies.values.sum
 
 
 @main def run(): Unit = Day4.run()
-
 
 @main def test(): Unit = Day4.test()
