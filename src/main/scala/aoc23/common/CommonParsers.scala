@@ -1,6 +1,14 @@
 package aoc23.common
 
-import cats.parse.{Parser, Parser0, Numbers, Rfc5234}
+import cats.data.NonEmptyList
+import cats.parse.{Numbers, Parser, Parser0, Rfc5234}
+
+object ParsingExtensions:
+  extension[T] (p: Parser[NonEmptyList[T]])
+    def pList: Parser[List[T]] = p.map(_.toList)
+
+  extension (p: Parser[NonEmptyList[Char]])
+    def pString: Parser[String] = p.pList.map(_.mkString)
 
 object CommonParsers:
   val spaces: Parser[Any] = Parser.char(' ').rep
