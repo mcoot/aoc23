@@ -53,7 +53,7 @@ object Parsing:
       Almanac(seeds, mappings)
 
 object Day5 extends SolutionWithParser[Almanac, Int, Int]:
-  override def dayNumber: Int = 0
+  override def dayNumber: Int = 5
 
   override def parser: Parser[Almanac] = Parsing.inputParser
 
