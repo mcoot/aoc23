@@ -5,6 +5,18 @@ import aoc23.common.{CommonParsers, SolutionWithParser}
 import aoc23.common.ParsingExtensions.*
 import cats.parse.Parser
 
+import scala.collection.immutable.NumericRange
+
+
+
+
+case class Seeds(values: List[Long]):
+  val ranges: List[NumericRange[Long]] = values.grouped(2).map { l =>
+    Range.Long(l.head, l.head + l(1), 1)
+  }.toList
+
+  def expandRanges: List[Long] =
+    ranges.flatMap(_.toList)
 
 case class MappingRange(destStart: Long, sourceStart: Long, length: Long):
   private def sourceRange = sourceStart until (sourceStart + length)
@@ -22,20 +34,26 @@ case class Mapping(fromType: String, toType: String, ranges: List[MappingRange])
       }.getOrElse(i)
     }
 
-case class Almanac(seeds: List[Long], mappings: Map[String, Mapping]):
-  def execute: List[Long] =
-    var values = seeds
+case class Almanac(seeds: Seeds, mappings: Map[String, Mapping]):
+  private def execute(startingValues: List[Long]) =
+    var values = startingValues
     var curType = "seed"
     while curType != "location" do
       values = mappings(curType).performMapping(values)
       curType = mappings(curType).toType
     values
 
+  def executeAsSeedsList: List[Long] =
+    execute(seeds.values)
+
+  def executeAsSeedsRanges: List[Long] =
+    execute(seeds.expandRanges)
 
 
 object Parsing:
-  private def seeds: Parser[List[Long]] =
-    CommonParsers.string("seeds: ") *> CommonParsers.spaceSeparated(CommonParsers.long)
+  private def seeds: Parser[Seeds] =
+    CommonParsers.string("seeds: ") *>
+      CommonParsers.spaceSeparated(CommonParsers.long).map(s => Seeds(s))
 
   private def mappingRange: Parser[MappingRange] =
     CommonParsers.triple(
@@ -82,10 +100,10 @@ object Day5 extends SolutionWithParser[Almanac, Long, Long]:
   override def parser: Parser[Almanac] = Parsing.inputParser
 
   override def solvePart1(input: Almanac): Long =
-    input.execute.min
+    input.executeAsSeedsList.min
 
   override def solvePart2(input: Almanac): Long =
-    ???
+    input.executeAsSeedsRanges.min
 
 
 @main def run(): Unit = Day5.run()
