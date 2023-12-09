@@ -6,22 +6,42 @@ import aoc23.common.ParsingExtensions.*
 import cats.parse.Parser
 
 
-case class MappingRange(destStart: Int, sourceStart: Int, length: Int)
+case class MappingRange(destStart: Long, sourceStart: Long, length: Long):
+  private def sourceRange = sourceStart until (sourceStart + length)
+  private def destRange = destStart until (destStart + length)
 
-case class Mapping(from: String, to: String, ranges: List[MappingRange])
+  def performMapping(i: Long): Long = i match
+    case i if sourceRange.contains(i) => i - sourceStart + destStart
+    case i => i
 
-case class Almanac(seeds: List[Int], mappings: List[Mapping])
+case class Mapping(fromType: String, toType: String, ranges: List[MappingRange]):
+  def performMapping(inputs: List[Long]): List[Long] =
+    inputs.map { i =>
+      ranges.map(_.performMapping(i)).collectFirst {
+        case j if j != i => j
+      }.getOrElse(i)
+    }
+
+case class Almanac(seeds: List[Long], mappings: Map[String, Mapping]):
+  def execute: List[Long] =
+    var values = seeds
+    var curType = "seed"
+    while curType != "location" do
+      values = mappings(curType).performMapping(values)
+      curType = mappings(curType).toType
+    values
+
 
 
 object Parsing:
-  private def seeds: Parser[List[Int]] =
-    CommonParsers.string("seeds: ") *> CommonParsers.spaceSeparated(CommonParsers.int)
+  private def seeds: Parser[List[Long]] =
+    CommonParsers.string("seeds: ") *> CommonParsers.spaceSeparated(CommonParsers.long)
 
   private def mappingRange: Parser[MappingRange] =
     CommonParsers.triple(
-      CommonParsers.int,
-      CommonParsers.int,
-      CommonParsers.int,
+      CommonParsers.long,
+      CommonParsers.long,
+      CommonParsers.long,
       CommonParsers.char(' ')
     ).map {
       case (d, s, r) => MappingRange(d, s, r)
@@ -50,18 +70,21 @@ object Parsing:
       _ <- CommonParsers.blankLine
       mappings <- CommonParsers.separated(mapping, CommonParsers.blankLine)
     yield
-      Almanac(seeds, mappings)
+      val mappingsMap: Map[String, Mapping] = mappings.foldLeft(Map[String, Mapping]()) { (m, mapping) =>
+        val kv = (mapping.fromType, mapping)
+        m + kv
+      }
+      Almanac(seeds, mappingsMap)
 
-object Day5 extends SolutionWithParser[Almanac, Int, Int]:
+object Day5 extends SolutionWithParser[Almanac, Long, Long]:
   override def dayNumber: Int = 5
 
   override def parser: Parser[Almanac] = Parsing.inputParser
 
-  override def solvePart1(input: Almanac): Int =
-    println(input)
-    ???
+  override def solvePart1(input: Almanac): Long =
+    input.execute.min
 
-  override def solvePart2(input: Almanac): Int =
+  override def solvePart2(input: Almanac): Long =
     ???
 
 

@@ -21,6 +21,8 @@ object CommonParsers:
 
   val int: Parser[Int] = Numbers.signedIntString.map(_.toInt)
 
+  val long: Parser[Long] = Numbers.signedIntString.map(_.toLong)
+
   val alphanum: Parser[Char] = Rfc5234.alpha | Rfc5234.digit
 
   def char(char: Char): Parser[Char] =
