@@ -3,16 +3,16 @@ package aoc23.common
 import scala.annotation.targetName
 
 // Extension pair -> Point2D
-extension (p: (Int, Int))
+extension (p: (Long, Long))
   def pos: Point2D = Point2D(p(0), p(1))
 
 // 2D point, vector, or complex number type
-case class Point2D(x: Int, y: Int):
+case class Point2D(x: Long, y: Long):
   // Construct from pair
-  def this(p: (Int, Int)) = this(p(0), p(1))
+  def this(p: (Long, Long)) = this(p(0), p(1))
 
   // Convert to pair
-  def pair: (Int, Int) = (x, y)
+  def pair: (Long, Long) = (x, y)
 
   def neighbourPoints: List[Point2D] =
     for
@@ -31,16 +31,16 @@ case class Point2D(x: Int, y: Int):
 
   // Scalar multiplication
   @targetName("mult")
-  def *(scalar: Int): Point2D = Point2D(x * scalar, y * scalar)
+  def *(scalar: Long): Point2D = Point2D(x * scalar, y * scalar)
 
   // Distance calculations
-  def hdist(otherX: Int): Int = Math.abs(otherX - x)
-  def hdist(other: Point2D): Int = hdist(other.x)
+  def hdist(otherX: Long): Long = Math.abs(otherX - x)
+  def hdist(other: Point2D): Long = hdist(other.x)
 
-  def vdist(otherY: Int): Int = Math.abs(otherY - y)
-  def vdist(other: Point2D): Int = vdist(other.y)
+  def vdist(otherY: Long): Long = Math.abs(otherY - y)
+  def vdist(other: Point2D): Long = vdist(other.y)
 
-  def manhattan(other: Point2D): Int = hdist(other) + vdist(other)
+  def manhattan(other: Point2D): Long = hdist(other) + vdist(other)
 
   def magnitude: Double = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2))
 

@@ -1,5 +1,6 @@
 package aoc23.common
 
+import scala.reflect.ClassTag
 import cats.data.NonEmptyList
 import cats.parse.{Numbers, Parser, Parser0, Rfc5234}
 

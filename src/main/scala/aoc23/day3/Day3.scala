@@ -16,7 +16,7 @@ object Item:
   case object Dot extends Item
 
 case class Grid(arr: Array[Array[Item]]):
-  def apply(pt: Point2D): Item = arr(pt.y)(pt.x)
+  def apply(pt: Point2D): Item = arr(pt.y.toInt)(pt.x.toInt)
 
   def bound: Point2D = Point2D(arr.length, arr(0).length)
   def maxPtIdx: Point2D = bound - Point2D(1, 1)
@@ -33,8 +33,8 @@ case class Grid(arr: Array[Array[Item]]):
     var curAdj: List[(Point2D, Item)] = List()
     var curNumber: Option[Int] = None
 
-    for y <- 0 until bound.y do
-      for x <- 0 until bound.x do
+    for y <- 0 until bound.y.toInt do
+      for x <- 0 until bound.x.toInt do
         // Sigh, we can have duplicates of a number so yuck
         // Use the (rightmost) point in a value as a unique identifier
         var curAdjId = Point2D(x, y)
