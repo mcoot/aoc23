@@ -73,7 +73,13 @@ case class Contraption(layout: Array[Array[Cell]]):
 
   def maxBound: Point2D = Point2D(layout(0).length - 1, layout.length - 1)
 
-  def inBounds(pt: Point2D) = pt.inBounds(minBound, maxBound)
+  def inBounds(pt: Point2D): Boolean = pt.inBounds(minBound, maxBound)
+
+  def genEdgeStartingBeams: Set[Beam] =
+    (minBound.x to maxBound.x)
+      .flatMap(x => List(Beam(Point2D(x, 0), BeamDir.Down), Beam(Point2D(x, maxBound.y), BeamDir.Up))).toSet ++
+      (minBound.y to maxBound.y)
+        .flatMap(y => List(Beam(Point2D(0, y), BeamDir.Right), Beam(Point2D(maxBound.x, y), BeamDir.Left))).toSet
 
   def prettyPrint: String =
     val sb = StringBuilder()
@@ -83,7 +89,7 @@ case class Contraption(layout: Array[Array[Cell]]):
       sb.append('\n')
     sb.mkString
 
-  def prettyPrintEnergized(seenPoints: Set[Point2D]) =
+  def prettyPrintEnergized(seenPoints: Set[Point2D]): String =
     val sb = StringBuilder()
     for (row, y) <- layout.zipWithIndex do
       for (cell, x) <- layout.zipWithIndex do
@@ -107,8 +113,8 @@ case class Contraption(layout: Array[Array[Cell]]):
       // If the beam is in empty space, continue it on its current path
       case (Cell.EmptySpace, _) => Set(beam.move)
 
-  def simulate: Int =
-    var beams: Set[Beam] = Set(Beam(Point2D(0, 0), BeamDir.Right))
+  def simulate(startingBeam: Beam): Int =
+    var beams: Set[Beam] = Set(startingBeam)
     val seen: MutableSet[Beam] = MutableSet()
     seen.addAll(beams)
     // Continue simulating until all light either leaves the contraption
@@ -150,10 +156,12 @@ object Day16 extends SolutionWithParser[Contraption, Int, Int]:
   override def parser: Parser[Contraption] = Parsing.inputParser
 
   override def solvePart1(input: Contraption): Int =
-    input.simulate
+    input.simulate(Beam(Point2D(0, 0), BeamDir.Right))
 
   override def solvePart2(input: Contraption): Int =
-    0
+    input.genEdgeStartingBeams
+      .map(beam => input.simulate(beam))
+      .max
 
 
 @main def run(): Unit = Day16.run()
