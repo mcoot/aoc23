@@ -60,5 +60,10 @@ object CommonParsers:
   def withTrimmedStartingSpaces[A](p: Parser[A]): Parser[A] =
     (spaces.?).with1 *> p
 
+  def grid[A](p: Parser[A]): Parser[List[List[A]]] =
+    lineSeparated(p.rep(1)).map { rows =>
+      rows.map(_.toList)
+    }
+
   def indented[A](p: Parser[A], indent: Int): Parser[A] =
     Parser.char(' ').rep(indent, indent) *> p
